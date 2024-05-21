@@ -274,7 +274,11 @@ set(QWEBRTC_SOURCES
     rtcwrappednativevideoencoder.h
     rtcyuvhelper.cpp
     rtcyuvhelper.h
-    rtcyuvplanarbuffer.h)
+    rtcyuvplanarbuffer.h
+    rtccameravideocapturer.cpp
+    rtccameravideocapturer.h
+    rtcmediacapturer.cpp
+    rtcmediacapturer.h)
 
 if(OS_MACOS OR OS_IOS)
   set(QWEBRTC_MACOS_SOURCES
