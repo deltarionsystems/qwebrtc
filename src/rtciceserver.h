@@ -38,26 +38,26 @@ class RTCIceServer : public QObject
     /**
      * @brief Initializes an RTCIceServer with its associated URLs, optional username, and optional credential.
      */
-    RTCIceServer(QVector<QString> urlStrings, QString username, QString credential,
+    explicit RTCIceServer(QVector<QString> urlStrings, QString username, QString credential,
                  QObject *parent = nullptr);
 
     /**
      * @brief Initializes an RTCIceServer with its associated URLs, optional username,
      * optional credential, and TLS cert policy.
      */
-    RTCIceServer(QVector<QString> urlStrings, QString username, QString credential,
+    explicit RTCIceServer(QVector<QString> urlStrings, QString username, QString credential,
                  RTCTlsCertPolicy tlsCertPolicy, QObject *parent = nullptr);
 
     /**
      * @brief Initializes an RTCIceServer with its associated URLs, user name, credential, TLS cert policy, and hostname.
      */
-    RTCIceServer(QVector<QString> urlStrings, QString username, QString credential,
+    explicit RTCIceServer(QVector<QString> urlStrings, QString username, QString credential,
                  RTCTlsCertPolicy tlsCertPolicy, QString hostname, QObject *parent = nullptr);
 
     /**
      * @brief Initializes an RTCIceServer with its associated URLs, user name, credential, TLS cert policy, hostname, and TLS ALPN protocols.
      */
-    RTCIceServer(QVector<QString> urlStrings, QString username, QString credential,
+    explicit RTCIceServer(QVector<QString> urlStrings, QString username, QString credential,
                  RTCTlsCertPolicy tlsCertPolicy, QString hostname,
                  QVector<QString> tlsAlpnProtocols, QObject *parent = nullptr);
 
@@ -66,7 +66,7 @@ class RTCIceServer : public QObject
      * optional credential, TLS cert policy, hostname, ALPN protocols and
      * elliptic curves.
      */
-    RTCIceServer(QVector<QString> urlStrings, QString username, QString credential,
+    explicit RTCIceServer(QVector<QString> urlStrings, QString username, QString credential,
                  RTCTlsCertPolicy tlsCertPolicy, QString hostname,
                  QVector<QString> tlsAlpnProtocols, QVector<QString> tlsEllipticCurves,
                  QObject *parent = nullptr);
@@ -76,7 +76,7 @@ class RTCIceServer : public QObject
      * @param d The private implementation.
      * @param parent The parent object.
      */
-    RTCIceServer(RTCIceServerPrivate &d, QObject *parent = nullptr);
+    explicit RTCIceServer(RTCIceServerPrivate &d, QObject *parent = nullptr);
 
     /**
      * @brief Gets the URI(s) for this server represented as Strings.

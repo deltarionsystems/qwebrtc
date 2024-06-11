@@ -115,3 +115,5 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Multimedia
                                                        Concurrent)
 
 add_subdirectory(src)
+add_subdirectory(cwebrtc)
+add_subdirectory(apprtc)
