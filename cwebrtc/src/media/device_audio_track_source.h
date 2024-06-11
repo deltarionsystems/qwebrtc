@@ -10,7 +10,7 @@
 #include "refptr.h"
 #include "tracked_object.h"
 
-#include "api/mediastreaminterface.h"
+#include "api/media_stream_interface.h"
 
 namespace Microsoft {
 namespace MixedReality {

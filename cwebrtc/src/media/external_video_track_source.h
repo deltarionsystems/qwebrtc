@@ -10,6 +10,8 @@
 #include "video_frame.h"
 #include "video_track_source.h"
 
+#include "api/task_queue/task_queue_base.h"
+
 namespace Microsoft {
 namespace MixedReality {
 namespace WebRTC {
@@ -120,8 +122,7 @@ class Argb32ExternalVideoSource : public RefCountedBase {
 
 /// Video track source acting as an adapter for an external source of raw
 /// frames.
-class ExternalVideoTrackSource : public VideoTrackSource,
-                                 public rtc::MessageHandler {
+class ExternalVideoTrackSource : public VideoTrackSource {
  public:
   using SourceState = webrtc::MediaSourceInterface::SourceState;
 
@@ -176,11 +177,12 @@ class ExternalVideoTrackSource : public VideoTrackSource,
       RefPtr<GlobalFactory> global_factory,
       std::unique_ptr<detail::BufferAdapter> adapter,
       rtc::scoped_refptr<detail::CustomTrackSourceAdapter> source);
-  // void Run(rtc::Thread* thread) override;
-  void OnMessage(rtc::Message* message) override;
+
   detail::CustomTrackSourceAdapter* GetSourceImpl() const {
     return (detail::CustomTrackSourceAdapter*)source_.get();
   }
+
+  void HandleMessageRequest();
 
   std::unique_ptr<detail::BufferAdapter> adapter_;
   std::unique_ptr<rtc::Thread> capture_thread_;
@@ -193,7 +195,8 @@ class ExternalVideoTrackSource : public VideoTrackSource,
   uint32_t next_request_id_ RTC_GUARDED_BY(request_lock_){};
 
   /// Lock for frame requests.
-  rtc::CriticalSection request_lock_;
+  mutable webrtc::Mutex request_lock_;
+  webrtc::ScopedTaskSafety safety_;
 };
 
 namespace detail {

@@ -21,7 +21,7 @@ class InteropLogSink : public rtc::LogSink {
       auto sink = std::make_unique<InteropLogSink>(std::move(callback));
       InteropLogSink* const ret = sink.get();
       {
-        rtc::CritScope lock(&GetCS());
+        webrtc::MutexLock lock(&GetMutex());
         GetSinks().push_back(std::move(sink));
       }
       return ret;
@@ -32,7 +32,7 @@ class InteropLogSink : public rtc::LogSink {
 
   static void Destroy(InteropLogSink* sink) noexcept {
     try {
-      rtc::CritScope lock(&GetCS());
+      webrtc::MutexLock lock(&GetMutex());
       auto& sinks = GetSinks();
       auto it = std::find_if(
           sinks.begin(), sinks.end(),
@@ -76,9 +76,9 @@ class InteropLogSink : public rtc::LogSink {
   static std::vector<std::unique_ptr<InteropLogSink>> s_sinks_;
 
  private:
-  static rtc::CriticalSection& GetCS() {
-    static rtc::CriticalSection cs;
-    return cs;
+  static webrtc::Mutex& GetMutex() {
+    static webrtc::Mutex m;
+    return m;
   }
   static std::vector<std::unique_ptr<InteropLogSink>>& GetSinks() {
     static std::vector<std::unique_ptr<InteropLogSink>> sinks;

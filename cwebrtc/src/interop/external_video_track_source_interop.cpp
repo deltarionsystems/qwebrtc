@@ -162,9 +162,11 @@ RefPtr<ExternalVideoTrackSource> ExternalVideoTrackSourceCreateFromI420A(
   }
   // Tracks need to be created from the worker thread
   rtc::Thread* const worker_thread = global_factory->GetWorkerThread();
-  auto track_source = worker_thread->Invoke<RefPtr<ExternalVideoTrackSource>>(
-      RTC_FROM_HERE, rtc::Bind(&ExternalVideoTrackSource::createFromI420A,
-                               std::move(global_factory), custom_source));
+  auto track_source = worker_thread->BlockingCall(
+      [gfactory = std::move(global_factory), custom_source] {
+        return ExternalVideoTrackSource::createFromI420A(gfactory,
+                                                         custom_source);
+      });
   if (!track_source) {
     return {};
   }
@@ -183,9 +185,11 @@ RefPtr<ExternalVideoTrackSource> ExternalVideoTrackSourceCreateFromArgb32(
   }
   // Tracks need to be created from the worker thread
   rtc::Thread* const worker_thread = global_factory->GetWorkerThread();
-  auto track_source = worker_thread->Invoke<RefPtr<ExternalVideoTrackSource>>(
-      RTC_FROM_HERE, rtc::Bind(&ExternalVideoTrackSource::createFromArgb32,
-                               std::move(global_factory), custom_source));
+  auto track_source = worker_thread->BlockingCall(
+      [gfactory = std::move(global_factory), custom_source] {
+        return ExternalVideoTrackSource::createFromArgb32(gfactory,
+                                                          custom_source);
+      });
   if (!track_source) {
     return {};
   }

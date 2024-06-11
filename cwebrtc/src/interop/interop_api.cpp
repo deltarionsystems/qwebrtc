@@ -544,10 +544,10 @@ mrsResult MRS_CALL mrsPeerConnectionGetSimpleStats(
         (*callback_)(user_data_, report.get());
       }
     };
-    rtc::scoped_refptr<Collector> collector =
-        new rtc::RefCountedObject<Collector>(callback, user_data);
+    rtc::scoped_refptr<Collector> collector = rtc::scoped_refptr<Collector>(
+        new rtc::RefCountedObject<Collector>(callback, user_data));
 
-    peer->GetStats(collector);
+    peer->GetStats(collector.get());
     return Result::kSuccess;
   }
   return Result::kInvalidNativeHandle;
@@ -555,14 +555,14 @@ mrsResult MRS_CALL mrsPeerConnectionGetSimpleStats(
 
 namespace {
 template <class T>
-void GetCommonValues(T& lhs, const webrtc::RTCOutboundRTPStreamStats& rhs) {
-  lhs.rtp_stats_timestamp_us = rhs.timestamp_us();
+void GetCommonValues(T& lhs, const webrtc::RTCOutboundRtpStreamStats& rhs) {
+  lhs.rtp_stats_timestamp_us = rhs.timestamp().ms();
   lhs.packets_sent = *rhs.packets_sent;
   lhs.bytes_sent = *rhs.bytes_sent;
 }
 template <class T>
-void GetCommonValues(T& lhs, const webrtc::RTCInboundRTPStreamStats& rhs) {
-  lhs.rtp_stats_timestamp_us = rhs.timestamp_us();
+void GetCommonValues(T& lhs, const webrtc::RTCInboundRtpStreamStats& rhs) {
+  lhs.rtp_stats_timestamp_us = rhs.timestamp().ms();
   lhs.packets_received = *rhs.packets_received;
   lhs.bytes_received = *rhs.bytes_received;
 }
@@ -589,7 +589,7 @@ mrsStatsReportGetObjects(mrsStatsReportHandle report_handle,
       if (!strcmp(stats.type(), "data-channel")) {
         const auto& dc_stats = stats.cast_to<webrtc::RTCDataChannelStats>();
         mrsDataChannelStats simple_stats{
-            dc_stats.timestamp_us(),     *dc_stats.datachannelid,
+                                         dc_stats.timestamp().ms(),     *dc_stats.data_channel_identifier,
             *dc_stats.messages_sent,     *dc_stats.bytes_sent,
             *dc_stats.messages_received, *dc_stats.bytes_received};
         (*callback)(user_data, &simple_stats);
@@ -602,7 +602,7 @@ mrsStatsReportGetObjects(mrsStatsReportHandle report_handle,
     for (auto&& stats : *report) {
       if (!strcmp(stats.type(), "outbound-rtp")) {
         const auto& ortp_stats =
-            stats.cast_to<webrtc::RTCOutboundRTPStreamStats>();
+            stats.cast_to<webrtc::RTCOutboundRtpStreamStats>();
         if (*ortp_stats.kind == "audio" &&
             // Removing a track will leave a "trackless" RTP stream. Ignore it.
             ortp_stats.track_id.is_defined()) {
@@ -615,7 +615,7 @@ mrsStatsReportGetObjects(mrsStatsReportHandle report_handle,
         if (*track_stats.kind == "audio") {
           if (!(*track_stats.remote_source)) {
             auto& dest_stats = FindOrInsert(pending_stats, track_stats.id());
-            dest_stats.track_stats_timestamp_us = track_stats.timestamp_us();
+            dest_stats.track_stats_timestamp_us = track_stats.timestamp().ms();
             dest_stats.track_identifier = track_stats.track_identifier->c_str();
             dest_stats.audio_level = GetValueIfDefined(track_stats.audio_level);
             dest_stats.total_audio_energy = *track_stats.total_audio_energy;
@@ -635,7 +635,7 @@ mrsStatsReportGetObjects(mrsStatsReportHandle report_handle,
     for (auto&& stats : *report) {
       if (!strcmp(stats.type(), "inbound-rtp")) {
         const auto& irtp_stats =
-            stats.cast_to<webrtc::RTCInboundRTPStreamStats>();
+            stats.cast_to<webrtc::RTCInboundRtpStreamStats>();
         if (*irtp_stats.kind == "audio") {
           auto& dest_stats = FindOrInsert(pending_stats, *irtp_stats.track_id);
           GetCommonValues(dest_stats, irtp_stats);
@@ -646,7 +646,7 @@ mrsStatsReportGetObjects(mrsStatsReportHandle report_handle,
         if (*track_stats.kind == "audio") {
           if (*track_stats.remote_source) {
             auto& dest_stats = FindOrInsert(pending_stats, track_stats.id());
-            dest_stats.track_stats_timestamp_us = track_stats.timestamp_us();
+            dest_stats.track_stats_timestamp_us = track_stats.timestamp().ms();
             dest_stats.track_identifier = track_stats.track_identifier->c_str();
             // This seems to be undefined in some not well specified cases.
             dest_stats.audio_level = GetValueIfDefined(track_stats.audio_level);
@@ -669,7 +669,7 @@ mrsStatsReportGetObjects(mrsStatsReportHandle report_handle,
     for (auto&& stats : *report) {
       if (!strcmp(stats.type(), "outbound-rtp")) {
         const auto& ortp_stats =
-            stats.cast_to<webrtc::RTCOutboundRTPStreamStats>();
+            stats.cast_to<webrtc::RTCOutboundRtpStreamStats>();
         if (*ortp_stats.kind == "video" &&
             // Removing a track will leave a "trackless" RTP stream. Ignore it.
             ortp_stats.track_id.is_defined()) {
@@ -683,7 +683,7 @@ mrsStatsReportGetObjects(mrsStatsReportHandle report_handle,
         if (*track_stats.kind == "video") {
           if (!(*track_stats.remote_source)) {
             auto& dest_stats = FindOrInsert(pending_stats, track_stats.id());
-            dest_stats.track_stats_timestamp_us = track_stats.timestamp_us();
+            dest_stats.track_stats_timestamp_us = track_stats.timestamp().ms();
             dest_stats.track_identifier = track_stats.track_identifier->c_str();
             dest_stats.frames_sent = GetValueIfDefined(track_stats.frames_sent);
             dest_stats.huge_frames_sent =
@@ -702,7 +702,7 @@ mrsStatsReportGetObjects(mrsStatsReportHandle report_handle,
     for (auto&& stats : *report) {
       if (!strcmp(stats.type(), "inbound-rtp")) {
         const auto& irtp_stats =
-            stats.cast_to<webrtc::RTCInboundRTPStreamStats>();
+            stats.cast_to<webrtc::RTCInboundRtpStreamStats>();
         if (*irtp_stats.kind == "video") {
           auto& dest_stats = FindOrInsert(pending_stats, *irtp_stats.track_id);
           GetCommonValues(dest_stats, irtp_stats);
@@ -714,7 +714,7 @@ mrsStatsReportGetObjects(mrsStatsReportHandle report_handle,
         if (*track_stats.kind == "video") {
           if (*track_stats.remote_source) {
             auto& dest_stats = FindOrInsert(pending_stats, track_stats.id());
-            dest_stats.track_stats_timestamp_us = track_stats.timestamp_us();
+            dest_stats.track_stats_timestamp_us = track_stats.timestamp().ms();
             dest_stats.track_identifier = track_stats.track_identifier->c_str();
             dest_stats.frames_received =
                 GetValueIfDefined(track_stats.frames_received);
@@ -731,7 +731,7 @@ mrsStatsReportGetObjects(mrsStatsReportHandle report_handle,
     for (auto&& stats : *report) {
       if (!strcmp(stats.type(), "transport")) {
         const auto& dc_stats = stats.cast_to<webrtc::RTCTransportStats>();
-        mrsTransportStats simple_stats{dc_stats.timestamp_us(),
+        mrsTransportStats simple_stats{dc_stats.timestamp().ms(),
                                        *dc_stats.bytes_sent,
                                        *dc_stats.bytes_received};
         (*callback)(user_data, &simple_stats);

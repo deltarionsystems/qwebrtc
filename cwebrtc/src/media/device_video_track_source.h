@@ -10,7 +10,7 @@
 #include "video_frame.h"
 #include "video_track_source.h"
 
-#include "api/mediastreaminterface.h"
+#include "api/media_stream_interface.h"
 
 namespace Microsoft {
 namespace MixedReality {

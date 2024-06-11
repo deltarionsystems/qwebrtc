@@ -17,7 +17,7 @@ ToggleAudioMixer::ToggleAudioMixer()
 bool ToggleAudioMixer::AddSource(Source* audio_source) {
   RTC_DCHECK(audio_source);
 
-  rtc::CritScope lock(&crit_);
+  webrtc::MutexLock lock(&crit_);
   // By default add the source as not output.
   auto result =
       source_from_id_.insert({audio_source->Ssrc(), {audio_source, false}});
@@ -50,7 +50,7 @@ void ToggleAudioMixer::TryAddToBaseImpl(KnownSource& known_source) {
 void ToggleAudioMixer::RemoveSource(Source* audio_source) {
   RTC_DCHECK(audio_source);
 
-  rtc::CritScope lock(&crit_);
+  webrtc::MutexLock lock(&crit_);
   // Check if the source is being played.
   const auto iter = source_from_id_.find(audio_source->Ssrc());
   RTC_DCHECK(iter != source_from_id_.end())
@@ -71,7 +71,7 @@ void ToggleAudioMixer::Mix(size_t number_of_channels,
   std::vector<Source*> redirected_sources;
   bool some_source_is_output = false;
   {
-    rtc::CritScope lock(&crit_);
+    webrtc::MutexLock lock(&crit_);
 
     // Collect the redirected sources.
     for (auto&& pair : source_from_id_) {
@@ -111,7 +111,7 @@ void ToggleAudioMixer::Mix(size_t number_of_channels,
 }
 
 void ToggleAudioMixer::OutputSource(int ssrc, bool output) {
-  rtc::CritScope lock(&crit_);
+  webrtc::MutexLock lock(&crit_);
 
   // If the source is unknown add a KnownSource with null Source* to remember
   // the choice.

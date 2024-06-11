@@ -545,7 +545,7 @@ class PeerConnection : public TrackedObject,
       RTC_GUARDED_BY(transceivers_mutex_);
 
   /// Mutex for the collections of transceivers.
-  rtc::CriticalSection transceivers_mutex_;
+  mutable webrtc::Mutex transceivers_mutex_;
 
   /// Collection of all data channels associated with this peer connection.
   std::vector<std::shared_ptr<DataChannel>> data_channels_
@@ -756,7 +756,7 @@ class PeerConnection : public TrackedObject,
           track_removed_cb) {
     using Media = MediaTrait<MEDIA_KIND>;
 
-    rtc::CritScope tracks_lock(&transceivers_mutex_);
+    webrtc::MutexLock tracks_lock(&transceivers_mutex_);
     auto it = std::find_if(transceivers_.begin(), transceivers_.end(),
                            [receiver](const RefPtr<Transceiver>& tr) {
                              return tr->HasReceiver(receiver);

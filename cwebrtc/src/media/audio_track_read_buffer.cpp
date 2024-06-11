@@ -10,6 +10,8 @@
 #include "peer_connection.h"
 #include "remote_audio_track_interop.h"
 
+#include "rtc_base/checks.h"
+
 namespace Microsoft {
 namespace MixedReality {
 namespace WebRTC {
@@ -231,7 +233,7 @@ Result AudioTrackReadBuffer::Read(
             sinwave_iter_ += dst_len;
             break;
           default:
-            RTC_NOTREACHED();
+            RTC_DCHECK_NOTREACHED();
             break;
         }
         *num_samples_read_out = num_samples_max - dst_len;

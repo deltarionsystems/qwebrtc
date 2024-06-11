@@ -175,7 +175,7 @@ Result ExternalVideoTrackSource::CompleteRequest(
   // Validate pending request ID and retrieve frame timestamp
   int64_t timestamp_ms_original = -1;
   {
-    rtc::CritScope lock(&request_lock_);
+    webrtc::MutexLock lock(&request_lock_);
     for (auto it = pending_requests_.begin(); it != pending_requests_.end();
          ++it) {
       if (it->first == request_id) {
@@ -213,7 +213,7 @@ Result ExternalVideoTrackSource::CompleteRequest(
   // Validate pending request ID and retrieve frame timestamp
   int64_t timestamp_ms_original = -1;
   {
-    rtc::CritScope lock(&request_lock_);
+    webrtc::MutexLock lock(&request_lock_);
     for (auto it = pending_requests_.begin(); it != pending_requests_.end();
          ++it) {
       if (it->first == request_id) {
@@ -261,33 +261,29 @@ void ExternalVideoTrackSource::Shutdown() noexcept {
 }
 
 // Note - This is called on the capture thread only.
-void ExternalVideoTrackSource::OnMessage(rtc::Message* message) {
-  switch (message->message_id) {
-    case MSG_REQUEST_FRAME:
-      const int64_t now = rtc::TimeMillis();
+void ExternalVideoTrackSource::HandleMessageRequest() {
+  const int64_t now = rtc::TimeMillis();
 
-      // Request a frame from the external video source
-      uint32_t request_id = 0;
-      {
-        rtc::CritScope lock(&request_lock_);
-        // Discard an old request if no space available. This allows restarting
-        // after a long delay, otherwise skipping the request generally also
-        // prevent the user from calling CompleteFrame() to make some space for
-        // more. The queue is still useful for just-in-time or short delays.
-        if (pending_requests_.size() >= kMaxPendingRequestCount) {
-          pending_requests_.erase(pending_requests_.begin());
-        }
-        request_id = next_request_id_++;
-        pending_requests_.emplace_back(request_id, now);
-      }
-      adapter_->RequestFrame(*this, request_id, now);
-
-      // Schedule a new request for 30ms from now
-      //< TODO - this is unreliable and prone to drifting; figure out something
-      // better
-      capture_thread_->PostAt(RTC_FROM_HERE, now + 30, this, MSG_REQUEST_FRAME);
-      break;
+  // Request a frame from the external video source
+  uint32_t request_id = 0;
+  {
+    webrtc::MutexLock lock(&request_lock_);
+    // Discard an old request if no space available. This allows restarting
+    // after a long delay, otherwise skipping the request generally also
+    // prevent the user from calling CompleteFrame() to make some space for
+    // more. The queue is still useful for just-in-time or short delays.
+    if (pending_requests_.size() >= kMaxPendingRequestCount) {
+      pending_requests_.erase(pending_requests_.begin());
+    }
+    request_id = next_request_id_++;
+    pending_requests_.emplace_back(request_id, now);
   }
+  adapter_->RequestFrame(*this, request_id, now);
+
+  // Schedule a new request for 30ms from now
+  //< TODO - this is unreliable and prone to drifting; figure out something
+  // better
+  capture_thread_->PostAt(RTC_FROM_HERE, now + 30, this, MSG_REQUEST_FRAME);
 }
 
 RefPtr<ExternalVideoTrackSource> ExternalVideoTrackSource::createFromI420A(

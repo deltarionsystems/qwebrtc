@@ -581,7 +581,7 @@ void PeerConnection::Close() noexcept {
   // the transceiver/track data.
 
   {
-    rtc::CritScope lock(&transceivers_mutex_);
+    webrtc::MutexLock lock(&transceivers_mutex_);
 
     // Force-remove remote tracks. It doesn't look like the TrackRemoved
     // callback is called when Close() is used, so force it here.
@@ -685,7 +685,7 @@ ErrorOr<Transceiver*> PeerConnection::AddTransceiver(
   }
   RTC_DCHECK(transceiver);
   {
-    rtc::CritScope lock(&transceivers_mutex_);
+    webrtc::MutexLock lock(&transceivers_mutex_);
     transceivers_.push_back(transceiver);
   }
 
@@ -1044,7 +1044,7 @@ void PeerConnection::OnLocalDescCreated(
 RefPtr<Transceiver> PeerConnection::FindWrapperFromRtpTransceiver(
     webrtc::RtpTransceiverInterface* rtp_tr) const {
   RTC_DCHECK(rtp_tr);
-  rtc::CritScope lock(&transceivers_mutex_);
+  webrtc::MutexLock lock(&transceivers_mutex_);
   auto it = std::find_if(transceivers_.begin(), transceivers_.end(),
                          [&rtp_tr](const RefPtr<Transceiver>& tr) {
                            return (tr->impl() == rtp_tr);
@@ -1149,7 +1149,7 @@ ErrorOr<Transceiver*> PeerConnection::GetOrCreateTransceiverForNewRemoteTrack(
         std::move(stream_ids), desired_direction);
     transceiver->SetReceiverPlanB(receiver);
     {
-      rtc::CritScope lock(&transceivers_mutex_);
+      webrtc::MutexLock lock(&transceivers_mutex_);
       transceivers_.push_back(transceiver);
     }
 
@@ -1181,7 +1181,7 @@ void PeerConnection::SynchronizeTransceiversUnifiedPlan(bool remote) {
   // Get transceiver wrappers sorted by RTP transceiver address in memory
   std::vector<RefPtr<Transceiver>> wrappers;
   {
-    rtc::CritScope lock(&transceivers_mutex_);
+    webrtc::MutexLock lock(&transceivers_mutex_);
     wrappers = transceivers_;
   }
   std::sort(wrappers.begin(), wrappers.end(),
@@ -1241,7 +1241,7 @@ ErrorOr<Transceiver*> PeerConnection::CreateTransceiverUnifiedPlan(
       global_factory_, media_kind, *this, mline_index, std::move(name),
       stream_ids, std::move(rtp_transceiver), desired_direction);
   {
-    rtc::CritScope lock(&transceivers_mutex_);
+    webrtc::MutexLock lock(&transceivers_mutex_);
     transceivers_.push_back(transceiver);
   }
   {

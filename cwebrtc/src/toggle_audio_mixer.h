@@ -29,7 +29,7 @@ class ToggleAudioMixer : public webrtc::AudioMixer {
 
   void TryAddToBaseImpl(KnownSource& audio_source);
 
-  rtc::CriticalSection crit_;
+  mutable webrtc::Mutex mutex_;
   rtc::scoped_refptr<webrtc::AudioMixerImpl> base_impl_;
   std::map<int, KnownSource> source_from_id_;
 };
